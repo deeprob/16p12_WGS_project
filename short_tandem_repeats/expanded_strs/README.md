@@ -12,3 +12,7 @@ get_expansions_2sd.py
 add_annotations.py
 ```
 
+### add_inheritence.py
+
+Adds STR inheritence annotation.
+
