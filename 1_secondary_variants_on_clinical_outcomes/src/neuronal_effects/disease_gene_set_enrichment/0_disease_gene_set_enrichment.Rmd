@@ -1,0 +1,572 @@
+---
+title: "Gene Set Enrichment"
+author: "Corrine Smolen"
+date: "8/18/2021"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+library(readxl)
+library(pheatmap)
+library(ggplot2)
+```
+
+# Dropbox location - you may need to change this!
+```{r}
+dropbox <- 'C:/Users/corny/Dropbox/'
+```
+
+# Read in gene annotations
+```{r}
+gene_annos <- read.csv(paste(dropbox, "16p12.2 project/Human patients project/WGS paper/5_SNV pipelines-annotations/Gene_Annotations/Gene_annotations.csv", sep = ''), stringsAsFactors = FALSE)
+```
+
+# Read in variant data
+```{r}
+snvs <- data.frame(read.table(paste(dropbox,
+                                        "16p12.2 project/Human patients project/WGS paper/9_Rare variant calls",
+                                        "/Rare coding SNV calls/Rare_Deleterious_Exonic_Variants_wInheritance.txt",
+                                        sep=''), stringsAsFactors = F, sep = '\t', header = TRUE))
+```
+
+```{r}
+cnvs <- data.frame(read.table(paste(dropbox,
+                                        "16p12.2 project/Human patients project/WGS paper/9_Rare variant calls",
+                                        "/Rare coding CNV calls/sv_calls_combined.txt",
+                                        sep=''), stringsAsFactors = F, sep = '\t', header = TRUE))
+dels <- cnvs[cnvs$Type=='DEL', ]
+dups <- cnvs[cnvs$Type=='DUP', ]
+```
+
+```{r}
+strs <- data.frame(read.csv(paste(dropbox,"16p12.2 project/Human patients project/WGS paper/8_STR variants",
+                                    "/Exonic_STR_expansions.csv", sep = '')), stringsAsFactors = F)
+```
+
+# Read in family relationships data
+```{r}
+cohort_info <- data.frame(read.csv(paste(dropbox,
+                                           "16p12.2 project/Human patients project/WGS paper/3_Cohort information/16p12_All_Participants_v9.csv",
+                                         sep = '')))
+cohort_info <- cohort_info[cohort_info$No_consent_forms!='X' & cohort_info$WGS=='X', ]
+pros <- cohort_info[cohort_info$Relationship=='P', 'Sample']
+```
+
+# Make gene lists of each variant type that are seen in probands
+```{r}
+# Missense, CADD>25
+pro_mis <- snvs[apply(snvs, 1, function(x) if (x['Mut_type']=='missense' & x['Sample'] %in% pros) TRUE else FALSE), 'Gene_id_']
+pro_mis <- pro_mis[!duplicated(pro_mis)]
+
+# LOF, CADD>25 or no CADD
+pro_lof <- snvs[apply(snvs, 1, function(x) if (x['Mut_type']=='lof' & x['Sample'] %in% pros) TRUE else FALSE), 'Gene_id_']
+pro_lof <- pro_lof[!duplicated(pro_lof)]
+
+# Splice, CADD>25
+pro_splice <- snvs[apply(snvs, 1, function(x) if (x['Mut_type']=='splice' & x['Sample'] %in% pros) TRUE else FALSE), 'Gene_id_']
+pro_splice <- pro_splice[!duplicated(pro_splice)]
+
+# Deletions
+pro_dels <- dels[apply(dels, 1, function(x) if (x['Sample'] %in% pros) TRUE else FALSE), 'Gene_ID']
+pro_dels <- pro_dels[!duplicated(pro_dels)]
+
+# Duplications
+pro_dups <- dups[apply(dups, 1, function(x) if (x['Sample'] %in% pros) TRUE else FALSE), 'Gene_ID']
+pro_dups <- pro_dups[!duplicated(pro_dups)]
+
+# STRs
+pro_strs <- strs[apply(strs, 1, function(x) if (x['Sample'] %in% pros) TRUE else FALSE), 'Gene_id_']
+pro_strs <- pro_strs[!duplicated(pro_strs)]
+```
+
+```{r}
+genesets <- colnames(gene_annos)[3:15]
+```
+
+```{r}
+heatmap_enrich <- function(var_set) {
+  # Get 10,000 draws of length(var_set) genes
+  genes <- gene_annos$gene_id
+  draw_sets <- c()
+  for (draw in 1:10000) {
+    set <- sample(genes, length(var_set), replace = F)
+    draw_sets <- c(draw_sets, list(set))
+  }
+  
+  df <- data.frame(matrix(nrow = length(genesets), ncol = 2), row.names = genesets)
+  colnames(df) <- c('Z', 'p')
+  
+  # Find overlap by marker set
+  for (gene_list in genesets) {
+    gene_set <- gene_annos[gene_annos[, gene_list]!='.', 'gene_id']
+  
+    # Find number and proportion of overlapping genes
+    overlap <- sum(var_set %in% gene_set)
+    overlap_prop <- overlap/length(var_set)
+  
+    # Get overlap of genes in draw_sets
+    draw_prop <- c()
+    for (draw in draw_sets) {
+      draw_prop <- c(draw_prop, sum(draw %in% gene_set)/length(var_set))
+    }
+  
+    # Calculate probability of observing proband proportion
+    if (mean(draw_prop) <= overlap_prop) {
+      p <- sum(draw_prop >= overlap_prop) / 10000
+    } else {
+      p <- sum(draw_prop <= overlap_prop) / 10000
+    }
+  
+    # Calculate Z-score for proband overlap from random distribution
+    stdev <- sd(draw_prop)
+    z <- (overlap_prop - mean(draw_prop))/stdev
+    
+    df[gene_list, 'Z'] <- z
+    df[gene_list, 'p'] <- p
+  }
+  
+  return(df)
+
+}
+```
+
+```{r}
+set.seed(205)
+mis_df <- heatmap_enrich(pro_mis)
+
+set.seed(205)
+lof_df <- heatmap_enrich(pro_lof)
+
+set.seed(205)
+splice_df <- heatmap_enrich(pro_splice)
+
+set.seed(205)
+del_df <- heatmap_enrich(pro_dels)
+
+set.seed(205)
+dup_df <- heatmap_enrich(pro_dups)
+
+set.seed(205)
+str_df <- heatmap_enrich(pro_strs)
+```
+
+# Combine into one dataframe per score
+# Z-score
+```{r}
+zs <- data.frame(matrix(nrow = 13, ncol=6))
+rows <- c('TADA_ASD_Risk', 'ASD_coexp', 'Brain_exp', 'Constrained_LOEUF', 'PSD', 'DD_DDD', 'CHD8_target', 'FMRP_target',
+                  'DBD', 'DDG2P', 'SFARI', 'Schizophrenia', 'Epilepsy')
+cols <- c('Missense', 'LOF', 'Splice', 'Deletions', 'Duplications', 'STRs')
+rownames(zs) <- rows
+colnames(zs) <- cols
+zs$Missense <- mis_df$Z
+zs$LOF <- lof_df$Z
+zs$Splice <- splice_df$Z
+zs$Deletions <- del_df$Z
+zs$Duplications <- dup_df$Z
+zs$STRs <- str_df$Z
+```
+
+# p-value
+```{r}
+uncorr_ps <- data.frame(matrix(nrow = 13, ncol=6))
+rownames(uncorr_ps) <- rows
+colnames(uncorr_ps) <- cols
+uncorr_ps$Missense <- mis_df$p
+uncorr_ps$LOF <- lof_df$p
+uncorr_ps$Splice <- splice_df$p
+uncorr_ps$Deletions <- del_df$p
+uncorr_ps$Duplications <- dup_df$p
+uncorr_ps$STRs <- str_df$p
+```
+# Bonferroni corrected p-value
+```{r}
+bhp <- data.frame(matrix(p.adjust(unlist(uncorr_ps), method = 'bonferroni'), nrow = 13))
+rownames(bhp) <- rownames(uncorr_ps)
+colnames(bhp) <- colnames(uncorr_ps)
+```
+
+```{r}
+make_fake_pmatrix = function(adj_p_mat, unadj_p_mat) {
+	# create a fake p value matrix
+	# where fdr corrected p < 0.05 gets **
+  # and no corrected p < 0.05 gets *
+	fake_p_matrix <- adj_p_mat
+
+  fake_p_matrix[unadj_p_mat <= 0.05] <- 5
+	fake_p_matrix[adj_p_mat <= 0.05] <- 50
+	fake_p_matrix[fake_p_matrix <= 1] <- 2
+	
+	fake_p_matrix[fake_p_matrix == 50] <- '**'
+	fake_p_matrix[fake_p_matrix == 5] <- '*'
+	fake_p_matrix[fake_p_matrix == 2] <- ''
+	
+	return(fake_p_matrix)
+}
+fake_p <- make_fake_pmatrix(bhp, uncorr_ps)
+pdf('Figures/1_enrichment_heatmaps_simulation.pdf')
+pheatmap(zs, treeheight_row = 0, treeheight_col = 0, display_numbers = fake_p, number_color = 'white', cellwidth = 15, cellheight = 15,
+           main = 'Z-Score', legend = T, cluster_rows = F, cluster_cols = F,
+           color=colorRampPalette(c("#053061", "#2166AC", "#4393C3", "#92C5DE", "#D1E5F0",
+                                    "#F7F7F7", "#FDDBC7", "#F4A582", "#D6604D", "#B2182B", "#67001F"))(60),
+           breaks = c(seq(-3, 0, by=0.1), seq(0.1, 3, by=0.1)))
+dev.off()
+```
+
+```{r}
+# Save Z-scores and p values to file
+# Reformat the table to put in one file
+out_df <- data.frame(matrix(nrow = 0, ncol = 5))
+colnames(out_df) <- c('Variant_Type', 'Disease_GeneSet', 'Z', 'uncorrected_p', 'Bonferroni_corrected_p')
+for (col in cols) {
+  for (row in rows) {
+    row_write <- data.frame(t(c(col, row, zs[row, col], uncorr_ps[row, col], bhp[row, col])))
+    colnames(row_write) <- c('Variant_Type', 'Disease_GeneSet', 'Z', 'uncorrected_p', 'Bonferroni_corrected_p')
+    out_df <- rbind(out_df, row_write)
+  }
+}
+write.csv(out_df, 'Result_tables/disease_gene_set_enrichment_simulation.csv', quote = F, row.names = F)
+```
+
+# Fisher's Exact
+Do the same analysis as a fishers exact test
+```{r}
+fe <- function(var_set) {
+  # Fisher's Exact for a gene being in a geneset and mutated in probands
+
+  # Get genes not in var_set
+  novar <- gene_annos[!(gene_annos$gene_id %in% var_set), 'gene_id']
+  
+  df <- data.frame(matrix(nrow = length(genesets), ncol = 4), row.names = genesets)
+  colnames(df) <- c('OR', 'p')
+  
+  # Find overlap by marker set
+  for (gene_list in genesets) {
+    gene_set <- gene_annos[gene_annos[, gene_list]!='.', 'gene_id']
+  
+    # Find number of genes in each category
+    var_geneset <- sum(var_set %in% gene_set)
+    var_nogeneset <- sum(!(var_set %in% gene_set))
+    novar_geneset <- sum(novar %in% gene_set)
+    novar_nogeneset <- sum(!(novar %in% gene_set))
+  
+    # Perform Fisher's Exact
+    t <- fisher.test(matrix(c(var_geneset, var_nogeneset, novar_geneset, novar_nogeneset), nrow = 2))
+    df[gene_list, ] <- c(t$estimate, t$conf.int[1], t$conf.int[2], t$p.value)
+  }
+  colnames(df) <- c('OR', 'CI_lower', 'CI_upper', 'p')
+  return(df)
+
+}
+```
+
+```{r}
+mis_df <- fe(pro_mis)
+lof_df <- fe(pro_lof)
+splice_df <- fe(pro_splice)
+del_df <- fe(pro_dels)
+dup_df <- fe(pro_dups)
+str_df <- fe(pro_strs)
+```
+
+# Combine into one dataframe per score
+# Z-score
+```{r}
+zs <- data.frame(matrix(nrow = 13, ncol=6))
+rows <- c('TADA_ASD_Risk', 'ASD_coexp', 'Brain_exp', 'Constrained_LOEUF', 'PSD', 'DD_DDD', 'CHD8_target', 'FMRP_target',
+                  'DBD', 'DDG2P', 'SFARI', 'Schizophrenia', 'Epilepsy')
+cols <- c('Missense', 'LOF', 'Splice', 'Deletions', 'Duplications', 'STRs')
+rownames(zs) <- rows
+colnames(zs) <- cols
+zs$Missense <- mis_df$OR
+zs$LOF <- lof_df$OR
+zs$Splice <- splice_df$OR
+zs$Deletions <- del_df$OR
+zs$Duplications <- dup_df$OR
+zs$STRs <- str_df$OR
+```
+
+# p-value
+```{r}
+uncorr_ps <- data.frame(matrix(nrow = 13, ncol=6))
+rownames(uncorr_ps) <- rows
+colnames(uncorr_ps) <- cols
+uncorr_ps$Missense <- mis_df$p
+uncorr_ps$LOF <- lof_df$p
+uncorr_ps$Splice <- splice_df$p
+uncorr_ps$Deletions <- del_df$p
+uncorr_ps$Duplications <- dup_df$p
+uncorr_ps$STRs <- str_df$p
+```
+# Bonferroni corrected p-value
+```{r}
+bhp <- data.frame(matrix(p.adjust(unlist(uncorr_ps), method = 'bonferroni'), nrow = 13))
+rownames(bhp) <- rownames(uncorr_ps)
+colnames(bhp) <- colnames(uncorr_ps)
+```
+
+```{r}
+fake_p <- make_fake_pmatrix(bhp, uncorr_ps)
+pdf('Figures/1_enrichment_heatmaps_fishers_exact.pdf')
+pheatmap(zs, treeheight_row = 0, treeheight_col = 0, display_numbers = fake_p, number_color = 'white', cellwidth = 15, cellheight = 15,
+           main = 'Odds Ratio', legend = T, cluster_rows = F, cluster_cols = F,
+           color=c(colorRampPalette(c("#053061", "#2166AC", "#4393C3", "#92C5DE", "#D1E5F0",
+                                    "#FFFFFF"))(10), colorRampPalette(c("#FFFFFF", "#FDDBC7", "#F4A582", "#D6604D", "#B2182B", "#67001F"))(10)),
+           breaks = c(seq(0, 1, by=0.1), seq(1.01, 2.01, by=0.1)))
+dev.off()
+```
+
+```{r}
+# Save Z-scores and p values to file
+# Reformat the table to put in one file
+lof_df$var <- 'LOF'
+lof_df$geneset <- rownames(lof_df)
+
+mis_df$var <- 'Missense'
+mis_df$geneset <- rownames(mis_df)
+
+splice_df$var <- 'Splice'
+splice_df$geneset <- rownames(splice_df)
+
+del_df$var <- 'Genes del.'
+del_df$geneset <- rownames(del_df)
+
+dup_df$var <- 'Genes dup.'
+dup_df$geneset <- rownames(dup_df)
+
+str_df$var <- 'STRs'
+str_df$geneset <- rownames(str_df)
+
+out_df <- rbind(mis_df, lof_df, splice_df, del_df, dup_df, str_df)
+write.csv(out_df, 'Result_tables/disease_gene_set_enrichment_fishers_exact.csv', quote = F, row.names = F)
+```
+
+# Gene Set-Phenotype Comparisons
+# Read in domain data
+```{r}
+domain_df <- data.frame(t(read_excel(paste(dropbox, "16p12.2 project/Human patients project/Phenotypic analysis/de Vries & ",
+                              "Psychiatric/WGS/MC_Children/prelim_child_domains_Jul16.xlsx", sep=''), col_names = FALSE)), row.names = 2,
+                        stringsAsFactors = FALSE)
+colnames(domain_df) <- domain_df[1, ]
+domain_df <- domain_df[-(1), ]
+domain_df[domain_df=='N/A'] <- NA
+```
+
+# OR of having a mutation in a gene in a gene set and a phenotype
+Contingency tables are set up like this:
+__(has phenotype and gene in gene set) | (only has phenotype)__
+(only has gene in gene set)         | (has neither pehnotype nor gene in gene set)
+It can also be written as:
+__a | b__
+c | d
+```{r}
+child_domains <- c("Developmental delay/ motor delay/ speech delay/intellectual disability",
+              "Behavioral", "Psychiatric", "Nervous System", "Congenital anomalies", "Growth / \r\nCraniofacial/Skeletal Abnormalities")
+
+conting_tables <- function(child, pheno, geneset) {
+  # Fill each cell with which category it belongs in (a, b, c, or d)
+  # Does child have phenotype?
+  pheno_score <- domain_df[child, pheno]
+  if (is.na(pheno_score)) {
+    return(NA)
+  } else {
+    pheno_score <- as.numeric(pheno_score)
+  }
+  
+  # Does child have gene in gene set?
+  pro_snvs <- length(rownames(snvs[snvs$Sample==child & snvs$Gene_id_ %in% geneset, ]))
+  pro_cnvs <- length(rownames(cnvs[cnvs$Sample==child & cnvs$Gene_ID %in% geneset, ]))
+  pro_strs <- length(rownames(strs[strs$Sample==child & strs$Gene_id_ %in% geneset, ]))
+  pro_genes <- pro_snvs + pro_cnvs + pro_strs
+  
+  if (pheno_score > 0 & pro_genes > 0) {
+    return('a')
+  } else if (pheno_score > 0 & pro_genes == 0) {
+    return('b')
+  } else if (pheno_score == 0 & pro_genes > 0) {
+    return('c')
+  } else if (pheno_score == 0 & pro_genes == 0) {
+    return('d')
+  }
+}
+
+or_p <- function(children) {
+  
+  or <- data.frame()
+  uncorr_p <- data.frame()
+  for (pheno in child_domains) {
+    for (setname in genesets) {
+      geneset <- gene_annos[gene_annos[, setname]!='.', 'gene_id']
+      cats <- lapply(children, conting_tables, pheno, geneset)
+      cats <- cats[!is.na(cats)]
+      a <- length(cats[cats=='a'])
+      b <- length(cats[cats=='b'])
+      c <- length(cats[cats=='c'])
+      d <- length(cats[cats=='d'])
+      conting <- data.frame(c(a, c), c(b, d))
+      test <- fisher.test(conting)
+      or[pheno, setname] <- test$estimate
+      uncorr_p[pheno, setname] <- test$p.value
+    }
+  }
+
+  rows <- c('ID/DD', 'Behavioral', 'Psychiatric', 'Nervous System', 'Congenital', 'Growth/Skeletal')
+  cols <- c('TADA_ASD_Risk', 'ASD_coexp', 'Brain_exp', 'Constrained_pLI', 'PSD', 'DD', 'CHD8_target', 'FMRP_target',
+            'DBD', 'DDG2P', 'SFARI', 'Schizophrenia', 'Epilepsy')
+  
+  rownames(or) <- rows
+  rownames(uncorr_p) <- rows
+  colnames(or) <- cols
+  colnames(uncorr_p) <- cols
+  
+  bhp <- data.frame(matrix(p.adjust(unlist(uncorr_p), method = 'bonferroni'), nrow = length(rows)))
+  rownames(bhp) <- rownames(uncorr_p)
+  colnames(bhp) <- colnames(uncorr_p)
+  
+  return(list(or = or, uncorr_p = uncorr_p, corr_p = bhp))
+}
+
+plot_heatmaps <- function(children) {
+  lst <- or_p(children)
+  pheatmap(lst$or, treeheight_row = 0, treeheight_col = 0, display_numbers = T, number_color = 'black',
+           main = 'Odds Ratio', legend = F, cluster_rows = F, cluster_cols = F,
+           color=colorRampPalette(c("#3470BC", "#F3F0F0", "#A9373B", "#A9373B"))(50),
+           breaks = c(seq(0, 1, by=0.06), seq(1.1, 5, by=0.15), seq(5.1, 10, by=5)))
+  pheatmap(lst$uncorr_p, treeheight_row = 0, treeheight_col = 0, display_numbers = T, number_format = "%.2f",
+           main = 'Uncorrected p-value', legend = F, cluster_rows = F, cluster_cols = F,
+           color=colorRampPalette(c("#FA8274", "#F3F0F0"))(51), breaks = c(seq(0, 0.1, by=0.002), seq(0.11, 1, by=1)))
+  pheatmap(lst$corr_p, treeheight_row = 0, treeheight_col = 0, display_numbers = T, number_format = "%.2f",
+           main = 'Bonferroni Corrected p-value', legend = F, cluster_rows = F, cluster_cols = F,
+           color=colorRampPalette(c("#FA8274", "#F3F0F0"))(51), breaks = c(seq(0, 0.1, by=0.002), seq(0.11, 1, by=1)))
+}
+```
+
+```{r}
+pdf('Figures/1.2_domain_OR_heatmaps.pdf')
+plot_heatmaps(pros)
+dev.off()
+```
+
+```{r}
+lst <- or_p(pros)
+```
+
+```{r}
+fake_p <- make_fake_pmatrix(lst$corr_p, lst$uncorr_p)
+pdf('Figures/1.2_domain_OR_heatmaps_recolor_cluster.pdf')
+pheatmap(lst$or, treeheight_row = 0, treeheight_col = 0, display_numbers = fake_p, number_color = 'white', cellwidth = 15, cellheight = 15,
+           main = 'OR', legend = T, cluster_rows = F, cluster_cols = F,
+           color=colorRampPalette(c("#053061", "#2166AC", "#4393C3", "#92C5DE", "#D1E5F0", "#F7F7F7", "#FDDBC7", "#F4A582", "#D6604D", "#B2182B", "#67001F", "#67001F", "#67001F", "#67001F","#67001F", "#67001F", "#67001F"))(50),
+           breaks = c(seq(0, 1, by=0.06), seq(1.1, 5, by=0.15), seq(5.1, 10, by=5)))
+dev.off()
+```
+
+# Calculate and plot Cohen's D
+```{r}
+df <- domain_df[rownames(domain_df) %in% pros, child_domains]
+df$sample <- rownames(df)
+for (setname in genesets) {
+  geneset <- gene_annos[gene_annos[, setname]!='.', 'gene_id']
+  # Annotate each child with number of genes in the geneset
+  df[, setname] <- apply(df, 1, function(x) (length(rownames(snvs[snvs$Sample==x['sample'] & snvs$Gene_id_ %in% geneset, ])) +
+                                               length(rownames(cnvs[cnvs$sample==x['sample'] & cnvs$Gene_ID %in% geneset, ])) + 
+                                               length(rownames(strs[cnvs$sample==x['sample'] & strs$Gene_id_ %in% geneset, ]))))
+}
+```
+
+```{r}
+output <- data.frame(matrix(ncol = 7, nrow = 0))
+pdf('Figures/1.3_domain_cohenD_plots.pdf')
+for (pheno in child_domains) {
+  d_df <- df[, genesets]
+  d_df$Phenotype <- apply(df, 1, function(x) if (!is.na(x[pheno]) & x[pheno] > 0) 'Yes' else if (is.na(x[pheno])) 'Missing' else 'No')
+
+  ds <- data.frame(row.names = genesets)
+  ds$estimate <- rep(-100, times = 13)
+  ds$lower <- rep(-100, times = 13)
+  ds$upper <- rep(-100, times = 13)
+  
+  for (geneset in genesets) {
+    yes <- d_df[d_df$Phenotype=='Yes', geneset]
+    no <- d_df[d_df$Phenotype=='No', geneset]
+    
+    d <- effsize::cohen.d(yes, no)
+    ds[geneset, 'estimate'] <- d$estimate
+    ds[geneset, 'lower'] <- d$conf.int[1]
+    ds[geneset, 'upper'] <- d$conf.int[2]
+    
+    p_val <- t.test(yes, no)$p.val
+    
+    sample_size <- length(yes)+length(no)
+    
+    row_write <- data.frame(t(c(pheno, geneset, d$conf.int[1], d$estimate, d$conf.int[2], p_val, sample_size)))
+    colnames(row_write) <- c('Phenotype', 'Disease_GeneSet', 'cohen_lower', 'cohen_d', 'cohen_upper', 'p', 'sample_size')
+    output <- rbind(output, row_write)
+  }
+
+  ds$x <- c(1:length(rownames(ds)))
+  p <- ggplot(ds, aes(x=x, y=estimate)) +
+    geom_point(size=3) +
+    geom_errorbar(aes(ymin=lower, ymax=upper)) +
+    geom_abline(slope = 0, intercept = 0, col='firebrick', linetype=2) +
+    labs(title=pheno, y="Cohen's D", x='') +
+    scale_x_continuous(breaks = c(1:length(rownames(ds))), labels = c("ASD_risk_TADA",                                            
+                                                                      "ASD_coexpression", "Brain Expressed", "Constrained_pLI",
+                                                                      "PSD", "DDD", 
+                                                                      "CHD8 targets", "FMRP targets",
+                                                                      "DBD", "DDDG2P", "SFARI_Gene", "Schizophrenia","Epilepsy")) +
+    theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1, size=11))
+  
+  print(p)
+}
+dev.off()
+```
+
+```{r}
+output$bh_corr_p <- p.adjust(p = output$p, method = 'bonferroni')
+```
+
+```{r}
+write.csv(output, 'Result_tables/disease_gene_set_phenotype_cohens_d.csv', quote = F, row.names = F)
+```
+
+# Make a summary heatmap
+```{r}
+# Reformat output table
+reform <- data.frame(matrix(nrow = length(child_domains)-1, ncol = length(genesets)))
+colnames(reform) <- genesets
+rownames(reform) <- child_domains[2:6]
+reform_corrp <- reform
+reform_uncorrp <- reform
+for (pheno in child_domains[2:6]) {
+  for (geneset in genesets) {
+    reform[pheno, geneset] <- as.numeric(unlist(output[output$Phenotype==pheno & output$Disease_GeneSet==geneset, 'cohen_d']))
+    reform_uncorrp[pheno, geneset] <- as.numeric(unlist(output[output$Phenotype==pheno & output$Disease_GeneSet==geneset, 'p']))
+    reform_corrp[pheno, geneset] <- as.numeric(unlist(output[output$Phenotype==pheno & output$Disease_GeneSet==geneset, 'bh_corr_p']))
+  }
+}
+```
+
+```{r}
+fake_p <- make_fake_pmatrix(reform_corrp, reform_uncorrp)
+# Change names for easier plotting
+rows <- c('Behavioral', 'Psychiatric', 'Nervous System', 'Congenital', 'Growth/Skeletal')
+cols <- c('TADA_ASD_Risk', 'ASD_coexp', 'Brain_exp', 'Constrained_pLI', 'PSD', 'DD', 'CHD8_target', 'FMRP_target',
+            'DBD', 'DDG2P', 'SFARI', 'Schizophrenia', 'Epilepsy')
+rownames(reform) <- rows
+rownames(fake_p) <- rows
+colnames(reform) <- cols
+colnames(fake_p) <- cols
+```
+
+```{r}
+pdf('Figures/1.4_domain_cohenD_summary_cluster.pdf')
+pheatmap(reform, treeheight_row = 0, treeheight_col = 0, display_numbers = fake_p, number_color = 'white', cellwidth = 15, cellheight = 15,
+           main = "Cohen's D", legend = T, cluster_rows = T, cluster_cols = T,
+           color=colorRampPalette(c("#053061", "#2166AC", "#4393C3", "#92C5DE", "#D1E5F0", "#F7F7F7", "#FDDBC7", "#F4A582", "#D6604D", "#B2182B", "#67001F"))(20),
+           breaks = seq(-1, 1, by=0.1))
+dev.off()
+```
+
