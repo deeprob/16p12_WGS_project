@@ -1,0 +1,45 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library("biomaRt") 
+```
+
+Convert entrez gene IDs in the gene-hpo file to ENSEMBL IDs
+
+```{r}
+# Load in gene-hpo file
+gene2hpo <- read.csv('Analysis_files/1_hpo_gene_annotations.csv')
+```
+
+```{r}
+# Load in Mart
+ensembl <- useMart("ensembl",dataset="hsapiens_gene_ensembl")   
+filters = listFilters(ensembl)
+```
+
+```{r}
+# Convert Entrez IDs to ENSEMBL
+entrezgene <- gene2hpo$entrez.gene.id            
+genes <- getBM(filters="entrezgene_id", attributes=c("ensembl_gene_id","entrezgene_id"), values=entrezgene, mart=ensembl)                         
+```
+
+```{r}
+output <- data.frame(matrix(ncol = 2, nrow = length(genes$ensembl_gene_id)))
+colnames(output) <- c('ENSEMBL_ID', 'entrez_id')
+output$ENSEMBL_ID <- genes$ensembl_gene_id
+output$entrez_id <- genes$entrezgene_id
+```
+
+```{r}
+df <- merge(gene2hpo, output, by.x = 'entrez.gene.id', by.y = 'entrez_id', all.y = TRUE)
+```
+
+```{r}
+# Save to file
+# Only keep last 2 columns (ENSEMBL ID and HPO ID)
+df <- df[, c(4, 3)]
+write.csv(df, 'Analysis_files/2_ensembl2hpo.csv', row.names = F)
+```

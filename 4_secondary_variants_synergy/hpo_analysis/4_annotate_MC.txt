@@ -1,0 +1,5 @@
+To get the HPO terms associated with the MC terms, MC terms were manually entered into the HPO website (hpo.jax.org)
+The relevant HPO ID for each term was manually added to an Excel sheet.
+
+This was done for both the child Master Checklist and the adult Master Checklist. Terms for both MCs were compiled into the same file.
+The output files is: Analysis_files/MC_HPO_terms.xlsx
