@@ -1,0 +1,160 @@
+---
+title: "Logistic Models"
+author: "Corrine Smolen"
+date: "2023-04-07"
+output: html_document
+---
+
+```{r}
+library(readxl)
+library(DescTools)
+```
+
+Add an age covariate into the linear model analysis
+```{r}
+dropbox <- 'D:/Dropbox'
+
+df <- read.csv(paste(dropbox, '/16p12.2 project/Human patients project/WGS paper/11_Variant Integration/16p12_cohort_summary_v21.csv', sep=''))
+```
+
+Restrict to probands with consent and phenotype data
+```{r}
+df <- df[df$Relationship=='P' & is.na(df$No_consent_forms) & df$Phenotypic.Domains=='X', ]
+```
+
+Make phenotypes binary
+```{r}
+pheno_cols = c('Child_behav', 'Child_psych', 'Child_nervous_system', 'Child_congenital', 'Child_craniofacial')
+pheno_cols2 = c('De_vrie','bmi_z_score','head_circumference_z_score','hrs_mat','srs')
+
+# Save original phenotype values
+pheno_df <- df
+
+# for each phenotype split the cohort in two
+numerical2binary = function(a, split_value=0) {
+	if (is.na(a)) {
+		return(NA)
+	} else if (a<=split_value) {
+		return(0)
+	} else if (a>split_value) {
+		return(1)
+	} 
+}
+
+for (col in pheno_cols) {
+  df[, col] <- sapply(df[, col], numerical2binary)
+}
+```
+
+Make predictor columns numeric and scale them
+```{r}
+df['All_rare_del_var'] = df[,'Missense_CADD25'] + df[,'LOF'] + df[,'Splice_CADD25'] + df[, 'genes_del'] + df[, 'genes_dup'] +	df[,'STRs_exonic']
+
+needed_cols <- c('Sample', pheno_cols, pheno_cols2, 'Sex', 'All_rare_del_var', 'Rare_Deleterious_SNVs', 'genes_del', 'genes_dup', 'STRs_exonic', 'Rare_Deleterious_SNVs_LOEUF', 'dels_loeuf', 'dups_loeuf', 'STRs_exonic_LOEUF035', 'SCZ_PRS')
+model_df <- df[, needed_cols]
+
+# Binary
+binary_cols  = c('Sex')
+for (col in binary_cols){
+	model_df[, col] <- as.numeric(as.factor(model_df[, col]))-1
+}
+
+# Numeric
+numeric_cols = c(pheno_cols2, 'All_rare_del_var', 'Rare_Deleterious_SNVs', 'genes_del', 'genes_dup', 'STRs_exonic',
+                 'Rare_Deleterious_SNVs_LOEUF', 'dels_loeuf', 'dups_loeuf', 'STRs_exonic_LOEUF035', 'SCZ_PRS')
+for (col in numeric_cols){
+	model_df[, col] <- scale(as.numeric(as.character(model_df[, col])))
+}
+```
+
+Fit models for each phenotypic domain
+```{r}
+pheno_model <- function(formula_end, pheno_cols, type) {
+  out <- data.frame()
+  for (col in pheno_cols) {
+  	formula = paste(col, '~', formula_end, sep=' ')
+  	
+  	# fit the model
+  	if (type=='log') {
+    	mod = glm(formula, data=model_df, family=binomial, x=T)
+    	p <- 'Pr(>|z|)'
+  	} else {
+  	  mod = lm(formula, data=model_df, x=T)
+  	  p <- 'Pr(>|t|)'
+  	}
+  	
+  	# get information
+  	summ = data.frame(cbind(confint(mod), coef(mod), coef(summary(mod))[,p]))
+  	
+  	# format output table
+  	colnames(summ) = c('2.5% C.I.', '97.5% C.I.', 'regression_coefficient', 'P-value')
+  	summ[,'Variable'] = rownames(summ)
+  	rownames(summ) <- NULL
+  	cols = c('Variable', 'regression_coefficient', '2.5% C.I.', '97.5% C.I.', 'P-value')
+  	summ = summ[,cols]
+  	
+  	if (type=='log') {
+  	  summ[, "R2"] = PseudoR2(mod, which="Nagelkerke")
+    	summ[,'Test'] = 'Logistic regression'
+    	summ[,'metric'] = 'Log odds ratio'
+  	} else {
+  	  summ[, "R2"] = summary(mod)$r.squared
+  	  summ[,'Test'] = 'Linear regression'
+    	summ[,'metric'] = 'Beta coefficient'
+  	}
+  	summ[, 'phenotype'] = col
+  	summ[,'model'] = formula_end
+  	summ[,'N'] = dim(mod$x)[1]
+  	
+  	out <- rbind(out, summ)
+  }
+  return(out)
+}
+
+res <- pheno_model('Sex + All_rare_del_var + SCZ_PRS', pheno_cols, 'log')
+res <- rbind(res, pheno_model('Sex + SCZ_PRS + Rare_Deleterious_SNVs + genes_del + genes_dup + STRs_exonic', pheno_cols, 'log'))
+res <- rbind(res, pheno_model('Sex + SCZ_PRS + Rare_Deleterious_SNVs_LOEUF + dels_loeuf + dups_loeuf + STRs_exonic_LOEUF035', pheno_cols, 'log'))
+var_cols <- c("All_rare_del_var", "Rare_Deleterious_SNVs", "genes_del", "genes_dup", "STRs_exonic", "SCZ_PRS", "Rare_Deleterious_SNVs_LOEUF",
+              "dels_loeuf", "dups_loeuf", "STRs_exonic_LOEUF035")
+for (var in var_cols) {
+  res <- rbind(res, pheno_model(paste('Sex + ', var, sep=''), pheno_cols, 'log'))
+}
+res <- rbind(res, pheno_model('Sex + All_rare_del_var + SCZ_PRS', pheno_cols2, 'lin'))
+res <- rbind(res, pheno_model('Sex + SCZ_PRS + Rare_Deleterious_SNVs + genes_del + genes_dup + STRs_exonic', pheno_cols2, 'lin'))
+res <- rbind(res, pheno_model('Sex + SCZ_PRS + Rare_Deleterious_SNVs_LOEUF + dels_loeuf + dups_loeuf + STRs_exonic_LOEUF035', pheno_cols2, 'lin'))
+for (var in var_cols) {
+  res <- rbind(res, pheno_model(paste('Sex + ', var, sep=''), pheno_cols2, 'lin'))
+}
+```
+
+Save output to file
+```{r}
+write.csv(res, 'result_tables/1_covariate_uneven_split.csv', row.names = F)
+```
+
+Repeat process with an even split on phenotypes
+```{r}
+pheno_df <- pheno_df[rownames(model_df), ]
+
+split_vals <- c(1, 0, 0, 1, 2)
+for (i in 1:length(pheno_cols)){
+  col <- pheno_cols[i]
+  num <- split_vals[i]
+  model_df[, col] <- sapply(pheno_df[, col], numerical2binary, split_value=num)
+}
+
+res <- pheno_model('Sex + All_rare_del_var + SCZ_PRS', pheno_cols, 'log')
+res <- rbind(res, pheno_model('Sex + SCZ_PRS + Rare_Deleterious_SNVs + genes_del + genes_dup + STRs_exonic', pheno_cols, 'log'))
+res <- rbind(res, pheno_model('Sex + SCZ_PRS + Rare_Deleterious_SNVs_LOEUF + dels_loeuf + dups_loeuf + STRs_exonic_LOEUF035', pheno_cols, 'log'))
+for (var in var_cols) {
+  res <- rbind(res, pheno_model(paste('Sex + ', var, sep=''), pheno_cols, 'log'))
+}
+res <- rbind(res, pheno_model('Sex + All_rare_del_var + SCZ_PRS', pheno_cols2, 'lin'))
+res <- rbind(res, pheno_model('Sex + SCZ_PRS + Rare_Deleterious_SNVs + genes_del + genes_dup + STRs_exonic', pheno_cols2, 'lin'))
+res <- rbind(res, pheno_model('Sex + SCZ_PRS + Rare_Deleterious_SNVs_LOEUF + dels_loeuf + dups_loeuf + STRs_exonic_LOEUF035', pheno_cols2, 'lin'))
+for (var in var_cols) {
+  res <- rbind(res, pheno_model(paste('Sex + ', var, sep=''), pheno_cols2, 'lin'))
+}
+
+write.csv(res, 'result_tables/1_covariate_even_split.csv', row.names = F)
+```
