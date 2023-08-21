@@ -1,0 +1,248 @@
+---
+title: "Gene Set Enrichment"
+author: "Corrine Smolen"
+date: "8/18/2021"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+library(readxl)
+library(pheatmap)
+library(ggplot2)
+```
+
+```{r}
+dropbox <- 'C:/Users/corny/Dropbox/'
+```
+
+# Read in gene annotations
+```{r}
+# Differentially Expressed genes in 16p12.1 carriers
+s1 <- read_excel('Analysis_files/Additional file 3 Data S1.xlsx', sheet = '16p12.1 carrier DEGs')
+colnames(s1) <- s1[2, ]
+s1 <- s1[-c(1, 2), ]
+# WGCNA co expression networks
+s3 <- read_excel('Analysis_files/Additional file 5 Data S3.xlsx', sheet = 'WGCNA modules')
+colnames(s3) <- s3[3, ]
+s3 <- s3[-c(1, 2, 3), ]
+# We only need some modules
+# From Matt - "Here, you can limit your tests to the following modules: black, blue, dark grey, dark magenta, dark orange, grey, and pink."
+s3 <- s3[, c('Black', 'Blue', 'Dark grey', 'Dark magenta', 'Dark orange', 'Grey', 'Pink')]
+s3[is.na(s3)] <- '.'
+# Remove '.' from WGCNA data
+s3_new <- s3
+for (col in colnames(s3)) {
+  s3_new[, col] <- sapply(as.character(unlist(s3[, col])), function(x) unlist(strsplit(as.character(x), "\\."))[1])
+}
+```
+
+```{r}
+# Combine into one dataframe
+s3_new$DEG <- c(s1$`Gene ID (Ensembl)`, rep('', length(rownames(s3))-length(rownames(s1))))
+s3_new[s3_new==''] <- '.'
+```
+
+Add to gene annotations dataframe
+```{r}
+# This dataframe contains all the genes that could have been annotated in the WGS variants
+gene_annos <- read.csv(paste(dropbox, "16p12.2 project/Human patients project/WGS paper/5_SNV pipelines-annotations/Gene_Annotations/Gene_annotations.csv", sep = ''), stringsAsFactors = FALSE)
+gene_annos <- gene_annos[, c('gene_symbol', 'gene_id')]
+for (col in colnames(s3_new)) {
+  print(col)
+  gene_annos[, col] <- '.'
+  gene_annos[gene_annos$gene_id %in% unlist(s3_new[, col]), col] <- 'X'
+}
+```
+
+# Read in variant data
+```{r}
+snvs <- data.frame(read.table(paste(dropbox,
+                                        "16p12.2 project/Human patients project/WGS paper/9_Rare variant calls",
+                                        "/Rare coding SNV calls/Rare_Deleterious_Exonic_Variants_wInheritance.txt",
+                                        sep=''), stringsAsFactors = F, sep = '\t', header = TRUE))
+```
+
+```{r}
+cnvs <- data.frame(read.table(paste(dropbox,
+                                        "16p12.2 project/Human patients project/WGS paper/9_Rare variant calls",
+                                        "/Rare coding CNV calls/sv_calls_combined.txt",
+                                        sep=''), stringsAsFactors = F, sep = '\t', header = TRUE))
+dels <- cnvs[cnvs$Type=='DEL', ]
+dups <- cnvs[cnvs$Type=='DUP', ]
+```
+
+```{r}
+strs <- data.frame(read.csv(paste(dropbox,"16p12.2 project/Human patients project/WGS paper/8_STR variants",
+                                    "/Exonic_STR_expansions.csv", sep = '')), stringsAsFactors = F)
+```
+
+# Read in family relationships data
+```{r}
+cohort_info <- data.frame(read.csv(paste(dropbox,
+                                           "16p12.2 project/Human patients project/WGS paper/3_Cohort information/16p12_All_Participants_v9.csv",
+                                         sep = '')))
+cohort_info <- cohort_info[cohort_info$No_consent_forms!='X' & cohort_info$WGS=='X', ]
+pros <- cohort_info[cohort_info$Relationship=='P', 'Sample']
+```
+
+# Make gene lists of each variant type that are seen in probands
+```{r}
+# Missense, CADD>25
+pro_mis <- snvs[apply(snvs, 1, function(x) if (x['Mut_type']=='missense' & x['Sample'] %in% pros) TRUE else FALSE), 'Gene_id_']
+pro_mis <- pro_mis[!duplicated(pro_mis)]
+
+# LOF, CADD>25 or no CADD
+pro_lof <- snvs[apply(snvs, 1, function(x) if (x['Mut_type']=='lof' & x['Sample'] %in% pros) TRUE else FALSE), 'Gene_id_']
+pro_lof <- pro_lof[!duplicated(pro_lof)]
+
+# Splice, CADD>25
+pro_splice <- snvs[apply(snvs, 1, function(x) if (x['Mut_type']=='splice' & x['Sample'] %in% pros) TRUE else FALSE), 'Gene_id_']
+pro_splice <- pro_splice[!duplicated(pro_splice)]
+
+# Deletions
+pro_dels <- dels[apply(dels, 1, function(x) if (x['Sample'] %in% pros) TRUE else FALSE), 'Gene_ID']
+pro_dels <- pro_dels[!duplicated(pro_dels)]
+
+# Duplications
+pro_dups <- dups[apply(dups, 1, function(x) if (x['Sample'] %in% pros) TRUE else FALSE), 'Gene_ID']
+pro_dups <- pro_dups[!duplicated(pro_dups)]
+
+# STRs
+pro_strs <- strs[apply(strs, 1, function(x) if (x['Sample'] %in% pros) TRUE else FALSE), 'Gene_id_']
+pro_strs <- pro_strs[!duplicated(pro_strs)]
+```
+
+# Fisher's Exact
+```{r}
+genesets <- colnames(s3_new)
+fe <- function(var_set) {
+  # Fisher's Exact for a gene being in a geneset and mutated in probands
+
+  # Get genes not in var_set
+  novar <- gene_annos[!(gene_annos$gene_id %in% var_set), 'gene_id']
+  
+  df <- data.frame(matrix(nrow = length(genesets), ncol = 4), row.names = genesets)
+  colnames(df) <- c('OR', 'p')
+  
+  # Find overlap by marker set
+  for (gene_list in genesets) {
+    gene_set <- gene_annos[gene_annos[, gene_list]!='.', 'gene_id']
+  
+    # Find number of genes in each category
+    var_geneset <- sum(var_set %in% gene_set)
+    var_nogeneset <- sum(!(var_set %in% gene_set))
+    novar_geneset <- sum(novar %in% gene_set)
+    novar_nogeneset <- sum(!(novar %in% gene_set))
+  
+    # Perform Fisher's Exact
+    t <- fisher.test(matrix(c(var_geneset, var_nogeneset, novar_geneset, novar_nogeneset), nrow = 2))
+    df[gene_list, ] <- c(t$estimate, t$conf.int[1], t$conf.int[2], t$p.value)
+  }
+  colnames(df) <- c('OR', 'CI_lower', 'CI_upper', 'p')
+  return(df)
+
+}
+```
+
+```{r}
+mis_df <- fe(pro_mis)
+lof_df <- fe(pro_lof)
+splice_df <- fe(pro_splice)
+del_df <- fe(pro_dels)
+dup_df <- fe(pro_dups)
+str_df <- fe(pro_strs)
+```
+
+# Combine into one dataframe per score
+# Z-score
+```{r}
+zs <- data.frame(matrix(nrow = 8, ncol=6))
+rows <- genesets
+cols <- c('Missense', 'LOF', 'Splice', 'Deletions', 'Duplications', 'STRs')
+rownames(zs) <- rows
+colnames(zs) <- cols
+zs$Missense <- mis_df$OR
+zs$LOF <- lof_df$OR
+zs$Splice <- splice_df$OR
+zs$Deletions <- del_df$OR
+zs$Duplications <- dup_df$OR
+zs$STRs <- str_df$OR
+```
+
+# p-value
+```{r}
+uncorr_ps <- data.frame(matrix(nrow = 8, ncol=6))
+rownames(uncorr_ps) <- rows
+colnames(uncorr_ps) <- cols
+uncorr_ps$Missense <- mis_df$p
+uncorr_ps$LOF <- lof_df$p
+uncorr_ps$Splice <- splice_df$p
+uncorr_ps$Deletions <- del_df$p
+uncorr_ps$Duplications <- dup_df$p
+uncorr_ps$STRs <- str_df$p
+```
+
+# Bonferroni corrected p-value
+```{r}
+bhp <- data.frame(matrix(p.adjust(unlist(uncorr_ps), method = 'bonferroni'), nrow = 8))
+rownames(bhp) <- rownames(uncorr_ps)
+colnames(bhp) <- colnames(uncorr_ps)
+```
+
+```{r}
+make_fake_pmatrix = function(adj_p_mat, unadj_p_mat) {
+	# create a fake p value matrix
+	# where fdr corrected p < 0.05 gets **
+  # and no corrected p < 0.05 gets *
+	fake_p_matrix <- adj_p_mat
+
+  fake_p_matrix[unadj_p_mat <= 0.05] <- 5
+	fake_p_matrix[adj_p_mat <= 0.05] <- 50
+	fake_p_matrix[fake_p_matrix <= 1] <- 2
+	
+	fake_p_matrix[fake_p_matrix == 50] <- '**'
+	fake_p_matrix[fake_p_matrix == 5] <- '*'
+	fake_p_matrix[fake_p_matrix == 2] <- ''
+	
+	return(fake_p_matrix)
+}
+```
+
+```{r}
+fake_p <- make_fake_pmatrix(bhp, uncorr_ps)
+pdf('Figures/3_rnaseq_enrichment_heatmaps_fishers_exact.pdf')
+pheatmap(zs, treeheight_row = 0, treeheight_col = 0, display_numbers = fake_p, number_color = 'black', cellwidth = 15, cellheight = 15,
+           main = 'Odds Ratio', legend = T, cluster_rows = F, cluster_cols = F,
+           color=c(colorRampPalette(c("#053061", "#2166AC", "#4393C3", "#92C5DE", "#D1E5F0",
+                                    "#FFFFFF"))(10), colorRampPalette(c("#FFFFFF", "#FDDBC7", "#F4A582", "#D6604D", "#B2182B", "#67001F"))(10)),
+           breaks = c(seq(0, 1, by=0.1), seq(1.01, 2, by=0.1)))
+dev.off()
+```
+
+```{r}
+# Save Z-scores and p values to file
+# Reformat the table to put in one file
+lof_df$var <- 'LOF'
+lof_df$geneset <- rownames(lof_df)
+
+mis_df$var <- 'Missense'
+mis_df$geneset <- rownames(mis_df)
+
+splice_df$var <- 'Splice'
+splice_df$geneset <- rownames(splice_df)
+
+del_df$var <- 'Genes del.'
+del_df$geneset <- rownames(del_df)
+
+dup_df$var <- 'Genes dup.'
+dup_df$geneset <- rownames(dup_df)
+
+str_df$var <- 'STRs'
+str_df$geneset <- rownames(str_df)
+
+out_df <- rbind(mis_df, lof_df, splice_df, del_df, dup_df, str_df)
+write.csv(out_df, 'Result_tables/3_rnaseq_enrichment_fishers_exact.csv', quote = F, row.names = F)
+```
+

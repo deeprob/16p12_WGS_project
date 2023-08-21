@@ -1,0 +1,46 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+Calculate fisher's exact OR and p-values for each reltaionship-region-time-type set
+```{r}
+df <- read.csv('Analysis_files/1_expression_variant_counts.csv')
+```
+
+Function to run fisher's exact on each row
+```{r}
+fisher_row <- function(row) {
+  f <- fisher.test(matrix(c(as.numeric(row['expressed_variant']),
+                            as.numeric(row['expressed_novariant']),
+                            as.numeric(row['notexpressed_variant']),
+                            as.numeric(row['notexpressed_novariant'])),
+                          nrow = 2), alternative = 'two.sided')
+  return(list(c(f$estimate, f$conf.int[1], f$conf.int[2], f$p.value)))
+}
+```
+
+```{r}
+df2 <- data.frame(t(data.frame(apply(df, 1, fisher_row))))
+```
+
+Add fisher's OR, log2(OR), p, and Bonferroni corrected p to dataframe
+```{r}
+# OR
+df$fisher_OR <- df2$X1
+df$fisher_OR_lower <- df2$X2
+df$fisher_OR_upper <- df2$X3
+# log2OR
+df$log2OR <- log2(df$fisher_OR)
+df$log2OR_lower <- log2(df$fisher_OR_lower)
+df$log2OR_upper <- log2(df$fisher_OR_upper)
+# p value
+df$fisher_p <- df2$X4
+# corrected p value
+df$bonferroni_p <- p.adjust(df$fisher_p, method = 'bonferroni')
+```
+
+Save to file
+```{r}
+write.csv(df, 'Result_tables/2_fishers_results.csv', row.names = F)
+```
