@@ -1,31 +1,40 @@
-This folder holds the scripts and data of Result-1 (Differential effects of secondary variants towards clinical outcomes) in the manuscript.
+This directory holds the analysis scripts for Result 1 (*Differential effects of secondary variants towards clinical outcomes*) in the manuscript. It is further sub-divided into four folders based on the analysis category. Below is a description of each analysis category following the order in which they appear in the manuscript.
 
-# Description of scripts
-The scripts are divided into various subfolders based on the type of analysis and the order in which they appear in the manuscript.
+# Phenotypic difference  
+Phenotype (both categorial and quantitative) comparison between probands and parents. Description of individual scripts are as follows:
 
-## Phenotypic Difference  
+*0_histogram_hrs_mat.r*: Smoothed histograms showing distributions of HRS-MAT in proband and parests. Figure reference (2C).
 
+*1_histogram_srs.r*: Smoothed histograms showing distributions of SRS in proband and parests. Figure reference (2C). 
 
-## Power Calculation
-0_avengeme.ipynb: Common variant power calculation
+TODO: There are other figures whose script are needed in this paragraph.
+
+# Variant burden difference
+Detecting significant differences in rare variant burden. It is further divided into two subsections. Each subsection and their individual scripts are listed below.
+
+## Power calculation
+*0_avengeme.ipynb*: Common variant power calculation
  
-1_rare_burden_plot.ipynb: Rare variant power calculation
+*1_rare_burden_plot*.ipynb: Rare variant power calculation. Figure reference (S1C).
 
+## Burden comparison
+*0_paired_ttests_max_samples.R*: Global differences in variant burden in probands vs parents. 
 
-## Variant Burden Difference
-0_paired_ttests_max_samples.R: Global differences in variant burden in probands vs parents
+*1_boxplots.py*: Box plots of above. Figure reference (3A, S2A)
 
-1_boxplots.py: Box plots of above
+*2_heatmap.py*: Heatmap of burden tests. Figure reference (3A)
 
-2_heatmap.py: Heatmap of burden tests
+*3_burden_test.R*: Comparing burden with Estonian Biobank. 
 
-3_burden_test.R: Comparing burden with Estonian Biobank
+*4_boxplots.py*: Box plot of above. Figure reference (S2B)
 
-4_boxplots.py: Box plot of above
+*5_heatmap.R*: Heatmap of burden tests. TODO: Check which heatmap creation script is used.
 
-5_heatmap.R: Heatmap of burden tests
+# Mulitple Generation
+Trends of increased phenotypic severity and accumulation of secondary variants over multiple generations of deletion carriers.
 
-## Mulitple Generation
+## Family history
+
 
 ## Neuronal Effects
 0_disease_gene_set_enrichment.Rmd: Neuronal gene set enrichment of secondary variants
