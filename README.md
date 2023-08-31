@@ -1,7 +1,10 @@
 # 16p12_WGS_project
-Codebase for the manuscript titled "Distinct variant classes differentially contribute to specific phenotypes of neurodevelopmentaldisorders"
+Codebase for the manuscript titled *"Distinct variant classes differentially contribute to specific phenotypes of neurodevelopmentaldisorders"*
 
-The codebase is divided into multiple directories based on the order of results that appear in the manuscript except the preprocess directory. Further details about each directory is included in independent README.md files within those directory. A brief description of each directory is given below:
+## Repository structure
+The codebase is divided into multiple directories based on the order of results that appear in the manuscript except the preprocess directory. Further details about each directory is included in independent README.md files within the directory. 
+
+A brief description of each directory is given below:
 
 **0_preprocess**: This directory holds all the raw data pre-processing scripts for this project. The pre-processed data is shared amongst all the other directories.
 
@@ -13,4 +16,8 @@ The codebase is divided into multiple directories based on the order of results 
 
 **4_secondary_variants_synergy**: This directory holds the analysis scripts for Result 4 (*Secondary variants synergistically modify clinical phenotypes of deletion carriers*) in the manuscript.   
 
-**5_secondary_variants_other_cohort**: This directory holds the analysis scripts for Result 5 (*Contributions of secondary variants to disease in other primary variant carriers*) in the manuscript.   
+**5_secondary_variants_other_cohort**: This directory holds the analysis scripts for Result 5 (*Contributions of secondary variants to disease in other primary variant carriers*) in the manuscript.
+
+## Citation
+
+

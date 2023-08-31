@@ -1,4 +1,7 @@
-This directory holds the analysis scripts for Result 3 (*Patterns of secondary variants conform to an inheritance-based liability threshold model*) in the manuscript. Below is a description of the scripts used.
+# Description
+This directory holds the analysis scripts for Result 3 (*Patterns of secondary variants conform to an inheritance-based liability threshold model*) in the manuscript. 
+
+Below is a description of the scripts used.
 
 *1_correlation_variant_v_variant.R*: Pearson's correlation between each individual classes of variants for probands and parents are calculated.
 

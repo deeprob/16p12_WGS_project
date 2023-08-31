@@ -1,4 +1,5 @@
-This directory holds the analysis scripts for Result 2 (*Classes of secondary variants jointly modulate specific developmental domains*) in the manuscript. It is further sub-divided into three folders based on the analysis category. Below is a description of each analysis category following the order in which they appear in the manuscript.
+# Description
+This directory holds the analysis scripts for Result 2 (*Classes of secondary variants jointly modulate specific developmental domains*) in the manuscript. It is further sub-divided into five folders based on the analysis category. Below is a description of each analysis category following the order in which they appear in the manuscript.
 
 
 # Variant traits model
@@ -32,4 +33,5 @@ This directory holds the analysis scripts for Result 2 (*Classes of secondary va
 
 # Disease gene set enrichment by phenotype
 This script is present in 1_secondary_variants_on_clinical_outcomes -> neuronal_effects -> disease_gene_set_enrichment.
+
 *0_disease_gene_set_enrichment.Rmd*: Enrichment of disease genes by phenotypic domains. Figure reference (4F)

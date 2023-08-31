@@ -1,7 +1,10 @@
-This directory holds the analysis scripts for Result 1 (*Differential effects of secondary variants towards clinical outcomes*) in the manuscript. It is further sub-divided into four folders based on the analysis category. Below is a description of each analysis category following the order in which they appear in the manuscript.
+# Description
+This directory holds the analysis scripts for Result 1 (*Differential effects of secondary variants towards clinical outcomes*) in the manuscript. It is further sub-divided into four folders based on the analysis category. 
+
+Below is a description of each analysis category following the order in which they appear in the manuscript.
 
 # Phenotypic difference  
-Phenotype (both categorial and quantitative) comparison between probands and parents. Description of individual scripts are as follows:
+Phenotype (both categorial and quantitative) comparison between probands and parents.
 
 *0_histogram_hrs_mat.r*: Smoothed histograms showing distributions of HRS-MAT in proband and parests. Figure reference (2C).
 
@@ -30,15 +33,20 @@ Detecting significant differences in rare variant burden. It is further divided 
 
 *5_heatmap.R*: Heatmap of burden tests. TODO: Check which heatmap creation script is used.
 
-# Mulitple Generation
+# Multiple Generation
 Trends of increased phenotypic severity and accumulation of secondary variants over multiple generations of deletion carriers.
 
 ## Family history
 *1_anova.R*: TODO: find the location
+
 *2_annova_heatmap.R*: TODO find the location
-*3_FH_t-test.Rmd*: Significance test to compare rare variant burden in probands with family history and no family history. 
+
+*3_FH_t-test.Rmd*: Significance test to compare rare variant burden in probands with family history and no family history.
+
 *4_heatmap_ttest.R*: Heatmap of above. Figure reference (3C, S2E)
+
 *11_ttest_family_history.R*: TODO: find the location
+
 *12_heatmap_ttest_family_history.R*: TODO: find the location
 
 # Neuronal Effects
@@ -72,7 +80,7 @@ Enrichment of secondary variant genes in various other studies or database.
 
 *4_all_coding_only.py*: run fishers exact to check for enrichment of secondary variants in python for coding variants only
 
-*4a_make_barplot.py: Bar plot of odds ration
+*4a_make_barplot.py*: Bar plot of odds ratio
 
 *4b_make_forest_plot_combined.py*: Forest plot of above. Figure reference (3D)
 
