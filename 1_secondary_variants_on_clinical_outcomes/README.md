@@ -34,29 +34,67 @@ Detecting significant differences in rare variant burden. It is further divided 
 Trends of increased phenotypic severity and accumulation of secondary variants over multiple generations of deletion carriers.
 
 ## Family history
+*1_anova.R*: TODO: find the location
+*2_annova_heatmap.R*: TODO find the location
+*3_FH_t-test.Rmd*: Significance test to compare rare variant burden in probands with family history and no family history. 
+*4_heatmap_ttest.R*: Heatmap of above. Figure reference (3C, S2E)
+*11_ttest_family_history.R*: TODO: find the location
+*12_heatmap_ttest_family_history.R*: TODO: find the location
+
+# Neuronal Effects
+Enrichment of secondary variant genes in various other studies or database. 
+
+## Disease gene set enrichment
+*0_disease_gene_set_enrichment.Rmd*: Check enrichment of secondary variants in annotated disease genes for autism, schizophrenia etc.  Figure reference (S3A).
 
 
-## Neuronal Effects
-0_disease_gene_set_enrichment.Rmd: Neuronal gene set enrichment of secondary variants
+## Brain tissue stage enrichment
+*1_expression_timeline_annotations.py*: Get the rare variant genes expressed at different developmental points in brain tissue.
 
-1_download_allen_data.sh: Download sc-rnaseq data from allen brain institute
+*2_fishers_exact.Rmd*: Calculates fisher's exact OR and p-values for each reltaionship-region-time-type set.
 
-2_prepare_scrna_data.py: script to prepare sc-rna data
+*3_plot_enrichment.py*: Plot enrichment of different variant types by regions.
 
-3a_fishers_exact.py: run fishers exact to check for enrichment of secondary variants in python
+*4_proband_enrichments_only.py*: Plot enrichment of different variant types by regions in probands only. Figure reference (S3B).
 
-3b_fishers_exact_r_subclass.R: run fishers exact to check for enrichment of neuronal subclass on secondary variants in R
+## Neuronal class enrichment
+*1_download.sh*: Download sc-rnaseq data from allen brain institute
+
+*2_prepare_scrna_data.py*: binarizes sc-rna data after normalizing
+
+*3a_fishers_exact.py*: run fishers exact to check for enrichment of secondary variants in python
+
+*3b_fishers_exact_r_subclass.R*: run fishers exact to check for enrichment of neuronal subclass on secondary variants in R
 
 3b_fishers_exact_r_superclass.R: run fishers exact to check for enrichment of neuronal superclass on secondary variants in R
 
-3b_fishers_exact_r.R: run fishers exact to check for enrichment of secondary variants in R
+*3b_fishers_exact_r.R*: run fishers exact to check for enrichment of secondary variants in R
 
-4_all_coding_only.py: run fishers exact to check for enrichment of secondary variants in python for coding variants only
+*4_all_coding_only.py*: run fishers exact to check for enrichment of secondary variants in python for coding variants only
 
-4a_make_barplot.py: Bar plot of odds ration
+*4a_make_barplot.py: Bar plot of odds ration
 
-4b_make_forest_plot_combined.py: Forest plot of above
+*4b_make_forest_plot_combined.py*: Forest plot of above. Figure reference (3D)
 
-4b_make_forest_plot.py: Forest plot of above
+*4b_make_forest_plot.py*: Forest plot of above
 
+## LCL DE Enrichment
+*0_rnaseq_enrichment.Rmd*: Secondary variant gene enrichment within LCL DE genes. Figure reference (3E)
+
+## Gene network enrichment
+*1_download.sh*: Download data for 3q29 network.
+
+*2_get_network_metrics.py*: Get network degree of the loeuf genes. 
+
+*3_figure_degree.py*: Plot the network degree distribution of loeuf genes. 
+
+*4_prepare_variants_estonia.py*: Prepare variants for the estonia cohort.
+
+*5a_simulation_by_phenotype.py*: Simulate the distribution of genes falling within various network degree bins by phenotype. 
+
+*5b_simlulations_by_cohort.py*: Simulate the distribution of genes falling within various network degree bins by cohort.
+
+*6_simulation_ztest.py*: Simulate the distribution of genes falling within various network degree bins by cohort and add z-scores.
+
+*7_simulation_boxplots.py*: Boxplots of the simulation for all cohort. Figure reference (3F, S3C)
 
