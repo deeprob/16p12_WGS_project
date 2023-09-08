@@ -38,3 +38,58 @@ This directory holds the preprocessing scripts for raw data analyzed in the manu
 *14_omim_annotations.py*: Get OMIM annotations for genes. 
 
 *15_finalize_variants.sh*: Copy the final file to another file.
+
+TODO: add from where the annotation datasets were obtained.
+
+## CNV call and annotation
+### WGS
+Scripts used to call structural variants from WGS data divided by software.
+
+#### CNVnator
+*cnvnator.sh*: CNVnator calling script.
+
+#### Delly
+*0_delly.sh*:  Delly calling script.
+
+*1_delly_merge.sh*: Merge calls into a single file. 
+
+*2_delly_regenotype.sh*: Genotype from merged file.
+
+*3_delly_merge.sh*: Merged samples into a single vcf file.
+
+*4_delly_filter.sh*: Apply germline filter for delly.
+
+*5_filter.sh*: Filter low quality variant calls.
+
+#### Manta
+*manta.sh*: Manta calling script.
+
+#### Smoove lumpy
+*1_smoove.sh*: Smoove calling script.
+
+*2_union.sh*: Merge calls into a single vcf.
+
+*3_regenotype.sh*: Genotype from merged file.
+
+*4_get_failed_job_ids.sh*: Internal use for failed jobs.
+
+*5_redo_failed_jobs.sh*: Internal use for failed jobs.
+
+*6_paste.sh*: paste all the single sample VCFs with the same number of variants to get a single, squared, joint-called file.
+
+*7_filter.sh*: Filter low quality variants. 
+
+### Microarray
+Scripts used to call structural variants from microarray data.
+
+TODO: Find PennCNV script.
+
+### Final with annotation
+Finalize calls based on information from multiple callers and annotate them.
+
+*1_combine_all_calls.py*: Large and Small CNV calls combined to a single file.
+
+#### Large CNVs
+Large CNV calls were a union of PennCNV and CNVnator calls.
+
+##### PennCNV
