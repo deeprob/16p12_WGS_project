@@ -17,7 +17,7 @@ for idx, row in calls.iterrows():
 	type = row['Type']
 	ID = row['variant_id']
 	inheritance = row['inheritance']
-    nejm = row['NEJM_Name']
+	nejm = row['NEJM_Name']
 
 	out_lines = []
 

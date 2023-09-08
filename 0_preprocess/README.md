@@ -93,3 +93,98 @@ Finalize calls based on information from multiple callers and annotate them.
 Large CNV calls were a union of PennCNV and CNVnator calls.
 
 ##### PennCNV
+*1_nejm_filter.sh*: Find regions that have a 50% reciprocal overlap with NEJM CNVs
+
+*2_filter_penncnv.py*: Filter PennCNV calls based on frequency, gene number and SegDups and Centromere/Telomere overlap
+
+*3_annotate_gencode.py*: Annotate gencode genes
+
+*4_inheritance_lookup.sh*: Find all CNVs with a 50% reciprocal overlap of a given CNV
+
+*5_add_inheritance.py*: Add inheritance information for CNVs
+
+*6_filter_genic.py*: Filter calls for only those that overlap genes
+
+*7_confirm_denovo.sh*: Visually confirm the de novo calls using the visualizations Matt had made
+
+*8_update_inheritance.py*: Update inheritance after manual verification
+
+*9_finalize_calls.py*: Limit calls to only those we are using for WGS analysis making sure all samples passed microarray
+
+*10_separate_genes.py*: Separate calls into gene-level calls
+
+*11_annotate_genes.py*: Get LOEUF and OMIM annotations for genes
+
+##### CNVnator
+*1_get_filenames.sh*: Get all CNVnator called files. 
+
+*2_adjacent_filter.sh*: Merge adjacent calls per individual for each caller
+
+*3_split_by_size.sh*: Separate small and large CNV calls
+
+*4_merge_files.sh*: Merge files into one big file. 
+
+*5_nejm_filter.sh*: Find regions that have a 50% reciprocal overlap with NEJM CNVs
+
+*6_low_confidence_region_filter.sh*: Find regions that have less than a 50% reciprocal overlap with centromeres, SegDups, regions of low mappability, and V(D)J recombination regions from Brandler et al. Science 2016
+
+*7_str_filter.sh*: Remove any CNV with a breakpoint in an STR region
+
+*8_type_split.sh*: Split CNVs into Dels and Dups for easy frequency filtering
+
+*9_rarity_anno.sh*: Annotate dels and dups with population and cohort frequency
+
+*10_frequency_filter.py*: remove samples with microarray controls frequency > 0.1 or intracohort frequency > 10
+
+*10.1_frequency_anno.py*: Annotate with microarray frequency
+
+*11_gnomadSV_anno.sh*: Annotate the gnomAD SV frequency
+
+*12_gnomadSV_filter.py*: Filter the calls using the gnomAD SV AF
+
+*12.1_gnomadSV_anno.py*: Filter the calls using the gnomAD SV AF
+
+*13_combine_dels_dups.sh*: Combine deletion and duplication calls
+
+*13.1_combine_nejm_dels_dups.sh*: Combine deletion and duplication calls
+
+*14_samplot_plots.sh*: Make graphs for every large CNV
+
+*14.1_samplot_plots.sh*: Make graphs for every large CNV
+
+*14.2_nejm_samplot_plots.sh*: Make graphs for every large CNV
+
+*15_annotate_gencode.py*: Annotate gencode genes using gencode.v19.parsed.exons.csv
+
+*16_combine_calls.py*: ombined NEJM and other calls into one callset
+
+*17_add_inheritance.py*: Add cnv inheritance info
+
+*17.1_inheritance_lookup.sh*: Find all CNVs with a 50% reciprocal overlap of a given CNV
+
+*18_denovo_check.sh*: Visually confirm the de novo calls using the visualizations Matt had made
+
+*19_microarray_cnvnator_overlap.sh*: Get the overlap of the microarray calls and the CNVnator calls
+
+*19.1_microarray_cnvnator_overlap.py*: Get the overlap of the microarray calls and the CNVnator calls
+
+*20_finalize_calls.py*: Finalize CNV calls based on overlap.
+
+*21_separate_genes.py*: Separate calls into gene-level calls
+
+*22_annotate_genes.py*: Get LOEUF and OMIM annotations for genes
+
+
+#### Small CNVs
+Small CNV calls were called by at least two of CNVnator, Delly, Lumpy, Manta.
+
+##### CNVnator
+
+
+##### Delly
+
+##### Lumpy
+
+##### Manta
+
+##### Small Call Merge
