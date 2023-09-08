@@ -1,10 +1,23 @@
 # Description
 This directory holds the preprocessing scripts for raw data analyzed in the manuscript. It is further sub-divided into folders.
 
+1. [Phenotype](#phenotype)
+2. [Genotype](#genotype)
+3. [PRS](#prs)
+
 # Phenotype
+Cohort phenotype preparation is described here. The scripts are as follows:
+
 *0_Child_Domains_Jul16.ipynb*: Preparation of different phenotypic domains based on observed phenotypes
 
 # Genotype
+Cohort genotype preparation is described here. It is further subdivided into the following directories.
+1. [Genome alignment and SNV calls](#genome-alignment-and-snv-calls)
+2. [SNV annotation](#snv-annotation)
+3. [CNV call and annotation](#cnv-call-and-annotation)
+4. [STR call and annotation](#str-call-and-annotation)
+
+
 ## Genome alignment and SNV calls
 *0_gatk_pipe_array.sh*: Trimming, aligning, filtering, duplicate removal and SNV calling using gatk's best practices pipeline.
 
@@ -179,12 +192,102 @@ Large CNV calls were a union of PennCNV and CNVnator calls.
 Small CNV calls were called by at least two of CNVnator, Delly, Lumpy, Manta.
 
 ##### CNVnator
+*1_get_filenames.sh*: Get filenames called by CNVnator
 
+*2_adjacent_filter.py*: Merge adjacent calls per individual for each caller
+
+*2.1_adjacent_filter.sh*: Merge adjacent calls per individual for each caller
+
+*3_split_by_size.py*: Split variants by large and small cnvs
+
+*4_merge_files.sh*: Iterate through individual files and save to one large table
+
+*5_nejm_filter.sh*: Find regions that have a 50% reciprocal overlap with NEJM CNVs
+
+*6_low_confidence_region_filter.sh*: Find regions that have less than a 50% reciprocal overlap with centromeres, SegDups, regions of low mappability, and V(D)J recombination regions from Brandler et al. Science 2016
+
+*7_str_filter.sh*: Filter the 100% overlap calls for those with a breakpoint in an STR
+
+*7.1_str_filter.py*: Filter the 100% overlap calls for those with a breakpoint in an STR
 
 ##### Delly
+*1_get_filenames.sh*: Get filenames called by Delly
+
+*2_get_cnvs.py*: Get dels and dups from delly file
+
+*2.1_get_cnvs.sh*: Get dels and dups from delly file
+
+*3_adjacent_filter.py*: Merge adjacent calls per individual for each caller
+
+*3.1_adjacent_filter.sh*: Merge adjacent calls per individual for each caller
+
+*4_size_filter.py*: Split variants by large and small cnvs
+
+*5_merge_files.sh*: Iterate through individual files and save to one large table
+
+*6_nejm_filter.sh*: Find regions that have a 50% reciprocal overlap with NEJM CNVs
+
+*7_low_confidence_region_filter.sh*: Find regions that have less than a 50% reciprocal overlap with centromeres, SegDups, regions of low mappability, and V(D)J recombination regions from Brandler et al. Science 2016
+
+*8_str_filter.sh*: Filter the 100% overlap calls for those with a breakpoint in an STR
+
+*8.1_str_filter.py*: Filter the 100% overlap calls for those with a breakpoint in an STR
 
 ##### Lumpy
+*1_get_filenames.sh*: Get filenames called by Lumpy
+
+*2_get_cnvs.py*: Get dels and dups from Lumpy file
+
+*2.1_get_cnvs.sh*: Get dels and dups from Lumpy file
+
+*3_adjacent_filter.py*: Merge adjacent calls per individual for each caller
+
+*3.1_adjacent_filter.sh*: Merge adjacent calls per individual for each caller
+
+*4_size_filter.py*: Split variants by large and small cnvs
+
+*5_merge_files.sh*: Iterate through individual files and save to one large table
+
+*6_nejm_filter.sh*: Find regions that have a 50% reciprocal overlap with NEJM CNVs
+
+*7_low_confidence_region_filter.sh*: Find regions that have less than a 50% reciprocal overlap with centromeres, SegDups, regions of low mappability, and V(D)J recombination regions from Brandler et al. Science 2016
+
+*7.2_low_confidence_region_filter.sh*: Find regions that have less than a 50% reciprocal overlap with centromeres, SegDups, regions of low mappability, and V(D)J recombination regions from Brandler et al. Science 2016
+
+*8_str_filter.sh*: Filter the 100% overlap calls for those with a breakpoint in an STR
+
+*8.1_str_filter.py*: Filter the 100% overlap calls for those with a breakpoint in an STR
+
+*8.1.2_str_filter.py*: Filter the 100% overlap calls for those with a breakpoint in an STR
+
+*8.2_str_filter.sh*: Filter the 100% overlap calls for those with a breakpoint in an STR
 
 ##### Manta
+*1_get_filenames.sh*: Get filenames called by Manta
+
+*2_get_cnvs.py*: Get dels and dups from Manta file
+
+*2.1_get_cnvs.sh*: Get dels and dups from Manta file
+
+*3_adjacent_filter.py*: Merge adjacent calls per individual for each caller
+
+*3.1_adjacent_filter.sh*: Merge adjacent calls per individual for each caller
+
+*4_size_filter.py*: Split variants by large and small cnvs
+
+*5_merge_files.sh*: Iterate through individual files and save to one large table
+
+*6_nejm_filter.sh*: Find regions that have a 50% reciprocal overlap with NEJM CNVs
+
+*7_low_confidence_region_filter.sh*: Find regions that have less than a 50% reciprocal overlap with centromeres, SegDups, regions of low mappability, and V(D)J recombination regions from Brandler et al. Science 2016
+
+*8_str_filter.sh*: Filter the 100% overlap calls for those with a breakpoint in an STR
+
+*8.1_str_filter.py*: Filter the 100% overlap calls for those with a breakpoint in an STR
 
 ##### Small Call Merge
+
+
+## STR call and annotation
+
+# PRS
