@@ -286,7 +286,53 @@ Small CNV calls were called by at least two of CNVnator, Delly, Lumpy, Manta.
 *8.1_str_filter.py*: Filter the 100% overlap calls for those with a breakpoint in an STR
 
 ##### Small Call Merge
+*1_separate_by_sample.sh*: Separate CNV calls by sample for merging
 
+*1.1_separate_lumpy.sh*: Separate CNV calls by sample for merging
+
+*2_get_samples.sh*: Get sample names from log files
+
+*3_recip_overlap.sh*: Merge calls across individuals using 50% reciprocal overlap
+
+*4_combine_calls.sh*: Combine calls from all 3 callers into one file for each person
+
+*5_merge_calls.py*: For each person, merge calls from all 3 callers into a combined callset
+
+*5.1_merge_calls.sh*: For each person, merge calls from all 3 callers into a combined callset
+
+*6_combine_samples.sh*: Combine all the files into one for the cohort
+
+*7_type_split.py*: Split CNVs into Dels and Dups for easy frequency filtering
+
+*8_rarity_annot.sh*: Annotate cohort frequency for DELs and DUPs separately
+
+*9_intracohort_filter.py*: Remove samples with an inracohort frequency > 10
+
+*10_gnomadSV_anno.sh*: Annotate the gnomAD SV frequency
+
+*11_gnomadSV_filter.py*: Filter the calls using the gnomAD SV AF
+
+*12_combine_dels_dups.sh*: Combine deletion and duplication calls
+
+*13_samplot_spotcheck.sh*: Make graphs for 20 random plots and check
+
+*14_annotate_genes.py*: Annotate gencode genes
+
+*15_inheritance_lookup.sh*: Make an inheritance lookup table
+
+*16_inheritance.py*: Add CNV inheritance info
+
+*16.1_bgzip_outputs.sh*: bgzip and tabix index filtered Manta, Delly, CNVnator, and Lumpy outputs for inheritance checking
+
+*17_denovo_check.sh*: Manually check de novo calls
+
+*18_both_check.sh*: Manually check de novo calls
+
+*19_update_inheritance.py*: For de novo small CNVs, we decided to vizualize with samplot and only take calls that look real
+
+*20_separate_genes.py*: Separate calls into gene-level calls
+
+*21_annotate_genes.py*: Get LOEUF and OMIM annotations for genes
 
 ## STR call and annotation
 
