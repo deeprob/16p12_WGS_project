@@ -3,7 +3,7 @@ This directory holds the preprocessing scripts for raw data analyzed in the manu
 
 1. [Phenotype](#phenotype)
 2. [Genotype](#genotype)
-3. [PRS](#prs)
+3. [PRS Calculation](#prs-calculation)
 
 # Phenotype
 Cohort phenotype preparation is described here. The scripts are as follows:
@@ -376,7 +376,9 @@ Small CNV calls were called by at least two of CNVnator, Delly, Lumpy, Manta.
 
 *19_finalize_variants.sh*: Rename the file. 
 
+# PRS calculation
+*0_PRS_file_processing.sh/R*: Filter duplicate, ambiguous and low quality SNPs 
 
+*1_imputation.sh*: Impute SNP data
 
-
-# PRS
+*2_ldpred2_{autism/cross_disorder/ed_attainment/intelligence/schizophrenia}.r*: Use LDPred2 to calculate PRS scores.
