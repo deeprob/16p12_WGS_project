@@ -21,7 +21,7 @@ Below is a description of each analysis category following the order in which th
 
 *4_merge_stats.py*: Heatmap of model coefficients. Figure reference (7A).
 
-TODO: Forest plots Fig S7A, S8A not sure which one to use. 
+*5_forest_plots.py*: Create forest plots of the model metrics . Figure reference (S7A, S8A)
 
 # Correlation
 ## Variant phenotype

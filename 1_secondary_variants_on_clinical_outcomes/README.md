@@ -42,7 +42,7 @@ Detecting significant differences in rare variant burden. It is further divided 
 Trends of increased phenotypic severity and accumulation of secondary variants over multiple generations of deletion carriers.
 
 ## Family history
-*1_anova.R*: TODO: find the location
+*1_anova.R*: TODO: find the location - found an archived location: look for real one; 
 
 *2_annova_heatmap.R*: TODO find the location
 
@@ -53,6 +53,8 @@ Trends of increased phenotypic severity and accumulation of secondary variants o
 *11_ttest_family_history.R*: TODO: find the location
 
 *12_heatmap_ttest_family_history.R*: TODO: find the location
+
+Note: Figures 3A,B and S2A,B,C,D not found
 
 # Neuronal Effects
 Enrichment of secondary variant genes in various other studies or database. 
