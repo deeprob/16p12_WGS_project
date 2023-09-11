@@ -336,4 +336,47 @@ Small CNV calls were called by at least two of CNVnator, Delly, Lumpy, Manta.
 
 ## STR call and annotation
 
+*1_gangstr.sh*: Identify STRs using gangstr from sample bam files.
+
+*2_dumpstr.sh*: Filter STRs of low quality using dumpstr.
+
+*3_mergestr.sh*: TODO: could not find this script.
+
+*4_dumpstr_by_family2.sh*: DumpSTR with pop level filter
+
+*4_dumpstr_by_family2_chrX_hw.sh*: DumpSTR with pop level filter for chrX.
+
+*5_make_filter_loci_bed.sh*: Creates a bed file of variants that should be filtered out due to population-level filters made by DumpSTR.
+
+*6_filter_vcf.sh*: Filter VCF file with bed file made by make_filter_loci_bed.sh.
+
+*7_get_important_calls.sh*: For each family, makes a bedfile of locations to keep.
+
+*8_filter_vcf_chrX.sh*: Combines the steps of filter_vcf.sh and get_important_calls.sh for chromosome X.
+
+*9_gangstr_family.sh*: Runs GangSTR 2.5 on the 16p12 cohort with the important call.
+
+*10_get_expansions_and_annotate.sh*: Define STR expansions as STR variants of length >2SD than average STR lengths
+
+*11_annotate.sh*: Annotate with annovar.
+
+*12_combine.py*: Combine annotations with the main. 
+
+*13_filter_exonic.py*: Filter for STRs with exonic region overlap.
+
+*14_gencode_gene_ids.py*: Map gencode ids to ensemble ids and gene symbols.
+
+*15_change_column_names.py*: Change to more descriptive column names.
+
+*16_loeuf.py*: Add loeuf annotations.
+
+*17_omim.py*: Add omim annotations. 
+
+*18_filter_participants.py*: Get participants with loeuf and omim annotations. 
+
+*19_finalize_variants.sh*: Rename the file. 
+
+
+
+
 # PRS
