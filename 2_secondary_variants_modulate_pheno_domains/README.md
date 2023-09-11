@@ -1,5 +1,12 @@
 # Description
-This directory holds the analysis scripts for Result 2 (*Classes of secondary variants jointly modulate specific developmental domains*) in the manuscript. It is further sub-divided into five folders based on the analysis category. Below is a description of each analysis category following the order in which they appear in the manuscript.
+This directory holds the analysis scripts for Result 2 (*Classes of secondary variants jointly modulate specific developmental domains*) in the manuscript. It is further sub-divided into five folders based on the analysis category. 
+
+1. [Variant traits model](#variant-traits-model)
+2. [Burden tests](#burden-tests)
+3. [Variant quant trait correlation](#variant-quant-trait-correlation)
+4. [Go enrichment](#go-enrichment)
+
+Below is a description of each analysis category following the order in which they appear in the manuscript.
 
 
 # Variant traits model

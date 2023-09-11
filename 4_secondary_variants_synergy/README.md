@@ -1,6 +1,11 @@
 # Description
 This directory holds the analysis scripts for Result 4 (*Secondary variants synergistically modify clinical phenotypes of deletion carriers*) in the manuscript. It is further sub-divided into four folders based on the analysis category. 
 
+1. [Other annotated pathogenic variants](#other-annotated-pathogenic-variants)
+2. [HPO analysis](#hpo-analysis)
+3. [RVGDT analysis](#rvgdt-analysis)
+4. [Rarecomb analysis](#rarecomb-analysis)
+
 Below is a description of each analysis category following the order in which they appear in the manuscript.
 
 # Other annotated pathogenic variants

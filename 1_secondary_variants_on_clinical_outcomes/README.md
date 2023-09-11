@@ -1,5 +1,10 @@
 # Description
-This directory holds the analysis scripts for Result 1 (*Differential effects of secondary variants towards clinical outcomes*) in the manuscript. It is further sub-divided into four folders based on the analysis category. 
+This directory holds the analysis scripts for Result 1 (*Differential effects of secondary variants towards clinical outcomes*) in the manuscript. It is further sub-divided into four folders based on the analysis category.
+
+1. [Phenotypic difference](#phenotypic-difference)
+2. [Variant burden difference](#variant-burden-difference)
+3. [Multiple Generation](#multiple-generation)
+4. [Neuronal Effects](#neuronal-effects)
 
 Below is a description of each analysis category following the order in which they appear in the manuscript.
 
