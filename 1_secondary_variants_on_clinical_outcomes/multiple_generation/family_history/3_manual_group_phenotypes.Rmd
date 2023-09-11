@@ -1,0 +1,38 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(pheatmap)
+library(RColorBrewer)
+```
+
+```{r}
+df <- read.csv('Analysis_files/3_grouped_clusters.csv')
+rownames(df) <- df$Proband
+df <- df[, !grepl('Proband', colnames(df))]
+
+# Scale phenotype scores by their maximum value
+domains <- c('Parent_cognitive', 'Parent_SCZ', 'Parent_depression')
+max_vals <- c(2, 4, 4)
+for (i in 1:3) {
+  df[, grepl(domains[i], colnames(df))] <- df[, grepl(domains[i], colnames(df))]/max_vals[i]
+}
+```
+
+Visualize parent phenotypes in each clustering method
+```{r}
+graph_phenos <- function(grouping, drop_col) {
+  subdf <- df[, !grepl(drop_col, colnames(df))]
+  subdf <- subdf[order(subdf[, grouping]), ]
+  
+  pheatmap(subdf[, -(ncol(subdf))], annotation_row = subdf[, ncol(subdf), drop=F], treeheight_row = 0, treeheight_col = 0,
+         fontsize_row = 6, fontsize_col = 6, cellwidth = 7, cellheight = 7, cluster_rows = F, cluster_cols = F,
+         border_color='#CCCCCC', main = grouping, color = colorRampPalette(c('white', "#F7F7F7", "#FDDBC7", "#F4A582", "#D6604D", "#B2182B", "#67001F"))(20))
+}
+pdf('Figures/4_manual_heatmaps.pdf')
+graph_phenos("number_parents", "phenotype_parents")
+graph_phenos("phenotype_parents", "number_parents")
+dev.off()
+```

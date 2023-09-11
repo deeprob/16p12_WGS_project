@@ -42,19 +42,15 @@ Detecting significant differences in rare variant burden. It is further divided 
 Trends of increased phenotypic severity and accumulation of secondary variants over multiple generations of deletion carriers.
 
 ## Family history
-*1_anova.R*: TODO: find the location - found an archived location: look for real one; 
+*1_fam_history_scores.py*: Get the family history scores from cohort file.
 
-*2_annova_heatmap.R*: TODO find the location
+*2_supervised_groups.py*: Manually create groups from family history scores.
 
-*3_FH_t-test.Rmd*: Significance test to compare rare variant burden in probands with family history and no family history.
+*3_manual_group_phenotypes.Rmd*: Plot the cluster map for the grouped families. Figure reference (S2C).
 
-*4_heatmap_ttest.R*: Heatmap of above. Figure reference (3C, S2E)
+*4_FH_t-test.Rmd*: Significance test to compare rare variant burden in probands with family history and no family history.
 
-*11_ttest_family_history.R*: TODO: find the location
-
-*12_heatmap_ttest_family_history.R*: TODO: find the location
-
-Note: Figures 3A,B and S2A,B,C,D not found
+*5_heatmap_ttest.R*: Heatmap of above. Figure reference (3C, S2E)
 
 # Neuronal Effects
 Enrichment of secondary variant genes in various other studies or database. 
