@@ -1,5 +1,5 @@
 # Annotation files description
-This file lists sources from where the annotation files were downloaded.
+This file lists sources from where the annotation files for SNV, CNV, STR annotation were downloaded.
 
 1. [Clinvar](#clinvar)
 2. [GENCODE](#gencode)
