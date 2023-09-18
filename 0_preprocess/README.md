@@ -52,7 +52,6 @@ Cohort genotype preparation is described here. It is further subdivided into the
 
 *15_finalize_variants.sh*: Copy the final file to another file.
 
-TODO: add from where the annotation datasets were obtained.
 
 ## CNV call and annotation
 ### WGS
