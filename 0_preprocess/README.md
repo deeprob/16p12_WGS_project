@@ -93,9 +93,7 @@ Scripts used to call structural variants from WGS data divided by software.
 *7_filter.sh*: Filter low quality variants. 
 
 ### Microarray
-Scripts used to call structural variants from microarray data.
-
-TODO: Find PennCNV script.
+*0_penncnv.sh*: PennCNV to call structural variants from microarray data.
 
 ### Final with annotation
 Finalize calls based on information from multiple callers and annotate them.
